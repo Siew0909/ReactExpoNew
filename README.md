@@ -8,6 +8,9 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 
    ```bash
    npm install
+   
+   run this to start app with --tunnel
+   npm install --save-dev @expo/ngrok@^4.1.0
    ```
 
 2. Start the app
