@@ -4,9 +4,6 @@ import { Link, useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -18,18 +15,16 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const { onLogin, onRegister } = useAuth();
   const [loading, setLoading] = useState(false);
-  const client_id = 2;
-  const client_secret = "irbHZjOxkn2tWNUJbdxFWtsDDZrfOQmEXCY0BXZS";
   const router = useRouter();
 
   const login = async () => {
-    
     setLoading(true);
 
     const result = await onLogin!(username, password);
 
     if (result && result.error) {
       setLoading(false);
+      alert("Login error: " + result.msg);
     } else {
       setLoading(false);
       router.replace("/dashboard"); // Add this line
@@ -37,39 +32,38 @@ const Login = () => {
   };
 
   return (
-      <View style={{ flexGrow: 1 }}>
-        <View style={styles.container}>
-          <Text style={styles.title}>Login</Text>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Username</Text>
-            <TextInput
-              value={username}
-              style={styles.inputMock}
-              placeholder="Username..."
-              onChangeText={(text) => setUsername(text)}
-            ></TextInput>
-          </View>
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Password</Text>
-            <TextInput
-              value={password}
-              secureTextEntry={true}
-              style={styles.inputMock}
-              placeholder="Password..."
-              onChangeText={(text) => setPassword(text)}
-            ></TextInput>
-          </View>
-          {loading ? (
-            <ActivityIndicator size="large" color={"red"} />
-          ) : (
-            <>
-              <Button label="Sign In" theme="primary" onPress={login} />
-              <Link href="/signup">Create New Account</Link>
-            </>
-          )}
-
+    <View style={{ flexGrow: 1 }}>
+      <View style={styles.container}>
+        <Text style={styles.title}>Login</Text>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Username</Text>
+          <TextInput
+            value={username}
+            style={styles.inputMock}
+            placeholder="Username..."
+            onChangeText={(text) => setUsername(text)}
+          ></TextInput>
         </View>
+        <View style={styles.inputContainer}>
+          <Text style={styles.label}>Password</Text>
+          <TextInput
+            value={password}
+            secureTextEntry={true}
+            style={styles.inputMock}
+            placeholder="Password..."
+            onChangeText={(text) => setPassword(text)}
+          ></TextInput>
+        </View>
+        {loading ? (
+          <ActivityIndicator size="large" color={"red"} />
+        ) : (
+          <>
+            <Button label="Sign In" theme="primary" onPress={login} />
+            <Link href="/signup">Create New Account</Link>
+          </>
+        )}
       </View>
+    </View>
   );
 };
 

@@ -1,7 +1,22 @@
-import { View, Text } from 'react-native'
-import React from 'react'
+import { useEffect } from "react";
+import { useRouter } from "expo-router";
+import { useAuth } from "@/context/AuthContext";
+import { ActivityIndicator, View } from "react-native";
 
 const Landing = () => {
+  const router = useRouter();
+  const { authState } = useAuth();
+
+  useEffect(() => {
+    if (authState?.authenticated === null) return; // Still loading
+
+    if (authState?.authenticated) {
+      router.replace("/dashboard");
+    } else {
+      router.replace("/login");
+    }
+  }, [authState]);
+
   return (
     <View
       style={{
@@ -10,9 +25,9 @@ const Landing = () => {
         alignItems: "center",
       }}
     >
-      <Text style={{fontSize: 50, fontWeight: 500}}>Landing Page</Text>
+      <ActivityIndicator size="large" />
     </View>
-  )
-}
+  );
+};
 
-export default Landing
+export default Landing;
