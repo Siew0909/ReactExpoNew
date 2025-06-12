@@ -17,8 +17,8 @@ export default function TopNav() {
   };
   const canAccess = (permissions?: string[]) => {
     if (!permissions || permissions.length === 0) return true;
-    if (!authState?.role) return false; // no role → deny access
-    return permissions.includes(authState.role);
+    if (!authState?.roles) return false; // no role → deny access
+    return authState.roles.some((role) => permissions.includes(role));
   };
   return (
     <View style={styles.navbar}>

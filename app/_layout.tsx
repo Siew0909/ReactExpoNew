@@ -1,6 +1,7 @@
 import Button from "@/components/Button";
 import CustomDrawerContent from "@/components/CustomDrawer";
 import TopNav from "@/components/TopNav";
+import { routes } from "@/constants/routes";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { getPermissionsForPath } from "@/utils/permissionRoutes";
 import { Stack, usePathname, useRouter, useSegments } from "expo-router";
@@ -13,7 +14,6 @@ import {
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { routes } from "@/constants/routes";
 
 export default function Layout() {
   return (
@@ -31,11 +31,13 @@ const getRouteNameFromPath = (pathname: string): string => {
   // Try to find matching route
   const match = routes.find((route) => {
     if (route.type === "link") {
-      return route.path.replace("(auth)/", "").replace("(pages)/", "") === cleanPath;
+      return (
+        route.path.replace("(auth)/", "").replace("(pages)/", "") === cleanPath
+      );
     } else if (route.type === "dropdown") {
       // Check dropdown items
-      return route.items.some((item) =>
-        item.href.replace("(pages)/", "") === cleanPath
+      return route.items.some(
+        (item) => item.href.replace("(pages)/", "") === cleanPath
       );
     }
     return false;
@@ -50,7 +52,7 @@ function InnerLayout() {
   const pathname = usePathname();
   const router = useRouter();
   const segments = useSegments();
-const currentPageName = getRouteNameFromPath(pathname);
+  const currentPageName = getRouteNameFromPath(pathname);
 
   useEffect(() => {
     if (authState?.authenticated === null) {
@@ -71,13 +73,13 @@ const currentPageName = getRouteNameFromPath(pathname);
 
     if (authState?.authenticated === true) {
       const allowedRoles = getPermissionsForPath(pathname);
-      if (allowedRoles && allowedRoles.length > 0) {
-        if (!allowedRoles.includes(authState.role!)) {
-          alert(
-            "Access Denied! You do not have permission to access this page."
-          );
-          router.replace("/dashboard");
-        }
+      if (
+        allowedRoles &&
+        allowedRoles.length > 0 &&
+        !allowedRoles.some((role) => authState.roles?.includes(role as any))
+      ) {
+        alert("Access Denied! You do not have permission to access this page.");
+        router.replace("/dashboard");
       }
     }
   }, [authState, pathname, segments]);

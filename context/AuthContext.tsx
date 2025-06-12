@@ -1,17 +1,16 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
-
-export enum Role {
-  ADMIN = "admin",
-  USER = "user",
-}
-
+import { Role, loginAccounts, persons } from "@/constants/persons";
 interface AuthProps {
   authState?: {
     // token: string | null;
     authenticated: boolean | null;
-    role: Role | null;
+    roles: Role[] | null;
+    username: string | null;
+    fullname?: string;
+    email?: string;
+    contact?: string;
   };
   onRegister?: (username: string, password: string) => Promise<any>;
   onLogin?: (
@@ -25,8 +24,9 @@ interface AuthProps {
 
 const TOKEN_KEY = "testing-token";
 export const API_URL = "http://localhost:8001/v1";
-const AuthContext = createContext<AuthProps>({});
 const router = useRouter();
+
+const AuthContext = createContext<AuthProps>({});
 
 export const useAuth = () => {
   return useContext(AuthContext);
@@ -36,8 +36,12 @@ export const AuthProvider = ({ children }: any) => {
   const [authState, setAuthState] = useState<{
     username: string | null;
     authenticated: boolean | null;
-    role: Role | null;
-  }>({ username: null, authenticated: null, role: null });
+    roles: Role[] | null;
+    fullname?: string;
+    email?: string;
+    contact?: string;
+
+  }>({ username: null, authenticated: null, roles: null });
 
   useEffect(() => {
     // Simulate loading auth state from storage or API
@@ -49,7 +53,7 @@ export const AuthProvider = ({ children }: any) => {
         setAuthState({
           authenticated: false,
           username: null,
-          role: null,
+          roles: null,
         });
       }
     };
@@ -59,11 +63,24 @@ export const AuthProvider = ({ children }: any) => {
 
   const login = async (username: string, password: string) => {
     try {
+      const user = loginAccounts.find(
+        (u) => u.username === username && u.password === password
+      );
+
+      if (!user) {
+        return { error: true, msg: "Invalid credentials" };
+      }
+      const person = persons.find((p) => p.id === user.personId);
+
       const newState = {
         authenticated: true,
         username: username,
-        role: username === "admin" ? Role.ADMIN : Role.USER,
+        roles: user.roles as Role[],
+        fullname: person?.fullname,
+        email: person?.email,
+        contact: person?.contact_no,
       };
+
       setAuthState(newState);
       await AsyncStorage.setItem("authState", JSON.stringify(newState));
 
@@ -80,7 +97,7 @@ export const AuthProvider = ({ children }: any) => {
     setAuthState({
       authenticated: false,
       username: null,
-      role: null,
+      roles: null,
     });
     await AsyncStorage.removeItem("authState");
   };
