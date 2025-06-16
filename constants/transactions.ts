@@ -1,4 +1,4 @@
-export const Transactions = [
+export const transactions = [
   {
     trx_id: "290525-4VTUDZ1957",
     transaction_date: "29/05/2025 10:19:57",

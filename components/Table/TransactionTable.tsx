@@ -1,49 +1,69 @@
-// components/TableSection.js
-import React from 'react';
+import MaterialIcons from "@expo/vector-icons/MaterialIcons";
+import React from "react";
 import {
-  View,
-  Text,
   FlatList,
   Pressable,
+  ScrollView,
   StyleSheet,
-  Dimensions,
-} from 'react-native';
+  Text,
+  View,
+} from "react-native";
 
 type Transaction = {
-  id: number | string;
-  fullname: string;
-  email: string;
-  age: number;
+  trx_id: string;
+  transaction_date: string;
+  customer_name: string;
+  number_id: string;
+  msisdn: string;
+  amount: number;
 };
 
 type SortConfig = {
-  key: keyof Transaction;
-  direction: 'asc' | 'desc' | '';
+  key: keyof Transaction | null;
+  direction: "asc" | "desc" | null;
 };
+
 type TransactionTableProps = {
   data: Transaction[];
   sortConfig: SortConfig;
   onSort: (key: keyof Transaction) => void;
+  currentPage: number;
+  setCurrentPage: (page: number) => void;
+  rowsPerPage: number;
+  setRowsPerPage: (rows: number) => void;
+  totalRows: number;
 };
 
-export default function TransactionTable({ data, sortConfig, onSort }: TransactionTableProps) {
+export default function TransactionTable({
+  data,
+  sortConfig,
+  onSort,
+  currentPage,
+  setCurrentPage,
+  rowsPerPage,
+  setRowsPerPage,
+  totalRows,
+}: TransactionTableProps) {
   const columns = [
-    { key: 'id', label: 'ID' },
-    { key: 'transaction_code', label: 'Transaction Code' },
-    { key: 'msisdn', label: 'MSISDN' },
-    { key: 'customer_name', label: 'Customer Name' },
-    { key: 'number_id', label: 'Number ID' },
-    { key: 'package_name', label: 'Package Name' },
+    { key: "trx_id", label: "Transaction ID" },
+    { key: "transaction_date", label: "Transaction Date" },
+    { key: "customer_name", label: "Customer Name" },
+    { key: "number_id", label: "Number ID" },
+    { key: "msisdn", label: "MSISDN" },
+    { key: "amount", label: "Amount" },
   ];
 
   const renderHeader = () => (
     <View style={styles.row}>
       {columns.map((col) => {
         const isSorted = sortConfig.key === col.key;
-        let sortSymbol = '';
-        if (isSorted) {
-          sortSymbol = sortConfig.direction === 'asc' ? ' ↑' : sortConfig.direction === 'desc' ? ' ↓' : '';
-        }
+        const icon = isSorted ? (
+          sortConfig.direction === "asc" ? (
+            <MaterialIcons name="arrow-upward" size={14} />
+          ) : sortConfig.direction === "desc" ? (
+            <MaterialIcons name="arrow-downward" size={14} />
+          ) : null
+        ) : null;
 
         return (
           <Pressable
@@ -52,8 +72,7 @@ export default function TransactionTable({ data, sortConfig, onSort }: Transacti
             onPress={() => onSort(col.key)}
           >
             <Text style={styles.headerText}>
-              {col.label}
-              {sortSymbol}
+              {col.label} {icon}
             </Text>
           </Pressable>
         );
@@ -65,39 +84,54 @@ export default function TransactionTable({ data, sortConfig, onSort }: Transacti
     <View style={styles.row}>
       {columns.map((col) => (
         <Text key={col.key} style={styles.cell}>
-          {item[col.key]}
+          {item[col.key]?.toString()}
         </Text>
       ))}
     </View>
   );
 
   return (
-    <View style={styles.table}>
-      {renderHeader()}
-      <FlatList data={data} keyExtractor={(item) => item.id.toString()} renderItem={renderItem} />
-    </View>
+    <ScrollView style={styles.scroll}>
+      <View style={styles.table}>
+        {renderHeader()}
+        {data.length === 0 ? (
+          <Text style={{ padding: 20, textAlign: "center" }}>
+            No transactions match the filter.
+          </Text>
+        ) : (
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.trx_id}
+            renderItem={renderItem}
+            contentContainerStyle={{ paddingBottom: 20 }}
+          />
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
-const screenWidth = Dimensions.get('window').width;
-
 const styles = StyleSheet.create({
+  scroll: {
+    width: "100%",
+  },
   table: {
-    minWidth: screenWidth,
+    minWidth: 800, // Force scrolling if screen is narrower
+    flexGrow: 1,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     borderBottomWidth: 1,
-    borderColor: '#ccc',
+    borderColor: "#ccc",
   },
   cell: {
     flex: 1,
     padding: 12,
   },
   header: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
   },
   headerText: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
