@@ -1,10 +1,10 @@
 // App.js
 import PersonFilter from "@/components/Filter/PersonFilter";
 import PersonTable from "@/components/Table/PersonTable";
+import { persons } from "@/constants/persons";
 import React, { useMemo, useState } from "react";
 import { StyleSheet } from "react-native";
 import { ScrollView } from "react-native-gesture-handler";
-import { persons } from "@/constants/persons";
 export default function Person() {
   const [filters, setFilters] = useState({
     fullname: "",
@@ -12,13 +12,19 @@ export default function Person() {
     age: "",
   });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+  const [currentPage, setCurrentPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
 
   const filteredData = useMemo(() => {
     let data = [...persons];
 
     (Object.keys(filters) as Array<keyof typeof filters>).forEach((key) => {
-      const value = filters[key];
+      let value = filters[key];
       if (value) {
+        if (key === "contact_no" && !value.startsWith("65")) {
+          value = "65" + value;
+        }
+
         data = data.filter((item) =>
           item[key]?.toString().toLowerCase().includes(value.toLowerCase())
         );
@@ -26,7 +32,6 @@ export default function Person() {
     });
 
     if (sortConfig.key && sortConfig.direction) {
-      
       data.sort((a, b) => {
         const aVal = a[sortConfig.key];
         const bVal = b[sortConfig.key];
@@ -38,6 +43,13 @@ export default function Person() {
 
     return data;
   }, [filters, sortConfig]);
+
+  const totalCount = filteredData.length;
+  const paginatedData = useMemo(() => {
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    return filteredData.slice(start, end);
+  }, [filteredData, currentPage, rowsPerPage]);
 
   // Toggle sort order (default → desc → asc → default)
   const toggleSort = (key) => {

@@ -1,20 +1,23 @@
-// components/FilterSection.js
 import React from 'react';
-import { View, TextInput, StyleSheet } from 'react-native';
+import { StyleSheet, TextInput, View } from "react-native";
 
 type PersonFilterProps = {
   filters: {
     fullname?: string;
     email?: string;
     age?: string;
+    contact_no?: string;
     [key: string]: string | undefined;
   };
   onFilterChange: (filters: { [key: string]: string | undefined }) => void;
 };
 
-const filterKeys = ['fullname', 'email', 'age'];
+const filterKeys = ["fullname", "email", "age", "contact_no"];
 
-export default function PersonFilter({ filters, onFilterChange }: PersonFilterProps) {
+export default function PersonFilter({
+  filters,
+  onFilterChange,
+}: PersonFilterProps) {
   const handleChange = (key: string, value: string) => {
     onFilterChange({ ...filters, [key]: value });
   };
@@ -26,8 +29,9 @@ export default function PersonFilter({ filters, onFilterChange }: PersonFilterPr
           <TextInput
             style={styles.input}
             placeholder={key
-              .replace(/([A-Z])/g, ' $1')
-              .replace(/^./, (s) => s.toUpperCase())}
+              .replace(/_/g, " ")
+              .replace(/\b\w/g, (char) => char.toUpperCase()) // Capitalize each word
+            }
             value={filters[key]}
             onChangeText={(text) => handleChange(key, text)}
           />

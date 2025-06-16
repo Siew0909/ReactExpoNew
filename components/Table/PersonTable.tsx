@@ -39,11 +39,10 @@ export default function PersonTable({
     { key: "fullname", label: "Fullname" },
     { key: "email", label: "Email" },
     { key: "age", label: "Age" },
-    { key: "contact_no", label: "Contact number" },
+    { key: "contact_no", label: "Contact Number" },
     { key: "username", label: "Username" },
   ];
   const { width: screenWidth } = useWindowDimensions();
-  const isMobile = screenWidth < 768; // adjust breakpoint as needed
 
   const renderHeader = () => (
     <View style={styles.row}>
