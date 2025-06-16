@@ -1,113 +1,118 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useState } from "react";
-import { Role, loginAccounts, persons } from "@/constants/persons";
+import { useRouter } from "expo-router";
+import api, { setLogoutAndRedirectFunction } from "@/shared/api/api";
+import { Role } from "@/constants/persons";
+
 interface AuthProps {
-  authState?: {
-    // token: string | null;
-    authenticated: boolean | null;
-    roles: Role[] | null;
-    username: string | null;
-    fullname?: string;
-    email?: string;
-    contact?: string;
-  };
-  onRegister?: (username: string, password: string) => Promise<any>;
-  onLogin?: (
-    username: string,
-    password: string
-    // client_id: number,
-    // client_secret: string
-  ) => Promise<any>;
+  authState?: AuthState;
+  onLogin?: (username: string, password: string) => Promise<any>;
   onLogout?: () => Promise<any>;
 }
 
-const TOKEN_KEY = "testing-token";
-export const API_URL = "http://localhost:8001/v1";
-const router = useRouter();
+interface AuthState {
+  authenticated: boolean | null;
+  username: string | null;
+  roles: Role[] | null;
+  fullname?: string;
+  email?: string;
+  contact?: string;
+}
 
+const AUTH_STATE_KEY = "authState";
 const AuthContext = createContext<AuthProps>({});
+const CLIENT_ID = 2;
+const CLIENT_SECRET = "irbHZjOxkn2tWNUJbdxFWtsDDZrfOQmEXCY0BXZS";
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: any) => {
-  const [authState, setAuthState] = useState<{
-    username: string | null;
-    authenticated: boolean | null;
-    roles: Role[] | null;
-    fullname?: string;
-    email?: string;
-    contact?: string;
-
-  }>({ username: null, authenticated: null, roles: null });
+  const router = useRouter();
+  const [authState, setAuthState] = useState<AuthState>({
+    authenticated: null,
+    username: null,
+    roles: null,
+  });
 
   useEffect(() => {
-    // Simulate loading auth state from storage or API
-    const initAuth = async () => {
-      const storedState = await AsyncStorage.getItem("authState");
-      if (storedState) {
-        setAuthState(JSON.parse(storedState));
+    const init = async () => {
+      const stored = await AsyncStorage.getItem(AUTH_STATE_KEY);
+      if (stored) {
+        setAuthState(JSON.parse(stored));
       } else {
-        setAuthState({
-          authenticated: false,
-          username: null,
-          roles: null,
-        });
+        setAuthState({ authenticated: false, username: null, roles: null });
       }
     };
 
-    initAuth();
+    init();
+
+    setLogoutAndRedirectFunction(async () => {
+      await logout();
+      router.replace("/login"); // or your login route
+    });
   }, []);
 
   const login = async (username: string, password: string) => {
     try {
-      const user = loginAccounts.find(
-        (u) => u.username === username && u.password === password
-      );
+      const payload = {
+        grant_type: "password",
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        username,
+        password,
+      };
 
-      if (!user) {
-        return { error: true, msg: "Invalid credentials" };
+      const res = await api.post("/auth/token", payload);
+      const data = res.data.data;
+
+      await AsyncStorage.setItem("user_auth_token", data.access_token);
+      if (data.refresh_token) {
+        await AsyncStorage.setItem("user_refresh_token", data.refresh_token);
       }
-      const person = persons.find((p) => p.id === user.personId);
 
-      const newState = {
+      const newState: AuthState = {
         authenticated: true,
-        username: username,
-        roles: user.roles as Role[],
-        fullname: person?.fullname,
-        email: person?.email,
-        contact: person?.contact_no,
+        username,
+        roles: [Role.ADMIN], // You can replace this with real roles if available
+        fullname: "", // Fetch from API if needed
+        email: "",
+        contact: "",
       };
 
       setAuthState(newState);
-      await AsyncStorage.setItem("authState", JSON.stringify(newState));
+      await AsyncStorage.setItem(AUTH_STATE_KEY, JSON.stringify(newState));
 
       return { success: true };
-    } catch (e) {
+    } catch (e: any) {
       return {
         error: true,
-        msg: (e as any).response?.data?.msg || "Unknown error",
+        msg: e.response?.data?.message || "Login failed.",
       };
     }
   };
 
   const logout = async () => {
+    await AsyncStorage.multiRemove([
+      "user_auth_token",
+      "user_refresh_token",
+      AUTH_STATE_KEY,
+    ]);
     setAuthState({
       authenticated: false,
       username: null,
       roles: null,
     });
-    await AsyncStorage.removeItem("authState");
   };
 
-  const value = {
-    // onRegister: register,
-    onLogin: login,
-    onLogout: logout,
-    authState,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{
+        onLogin: login,
+        onLogout: logout,
+        authState,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };

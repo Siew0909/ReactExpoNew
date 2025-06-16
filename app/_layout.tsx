@@ -4,6 +4,7 @@ import TopNav from "@/components/TopNav";
 import { routes } from "@/constants/routes";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { getPermissionsForPath } from "@/utils/permissionRoutes";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, usePathname, useRouter, useSegments } from "expo-router";
 import { Drawer } from "expo-router/drawer";
 import { useEffect } from "react";
@@ -14,13 +15,23 @@ import {
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: 3,
+        retryDelay: 3000,
+      },
+    },
+  }); // Create a new QueryClient instance
 
 export default function Layout() {
   return (
     <AuthProvider>
-      <GestureHandlerRootView style={{ flex: 1 }}>
-        <InnerLayout />
-      </GestureHandlerRootView>
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style={{ flex: 1 }}>
+          <InnerLayout />
+        </GestureHandlerRootView>
+      </QueryClientProvider>
     </AuthProvider>
   );
 }
