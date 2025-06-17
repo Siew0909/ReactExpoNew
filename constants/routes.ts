@@ -57,7 +57,7 @@ export const routes: AppRoute[] = [
       { title: "Refund", href: "(pages)/transactions/refund" },
       { title: "Void", href: "(pages)/transactions/void" },
     ],
-    icon: "more-vert",
+    icon: "money",
   },
   {
     type: "link",

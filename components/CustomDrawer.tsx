@@ -31,6 +31,12 @@ export default function CustomDrawerContent(props: any) {
       </View>
 
       {routes.map((route, index) => {
+          if (
+            authState?.authenticated &&
+            (route.name === "Login" || route.name === "Sign Up")
+          ) {
+            return null;
+          }
         if (!canAccess(route.permission)) return null;
 
         if (route.type === "link") {
