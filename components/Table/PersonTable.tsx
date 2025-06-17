@@ -8,15 +8,18 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  useWindowDimensions,
   View,
 } from "react-native";
+import HorizontalDivider from "../Dividers/HorizontalDivider";
+import VerticalDivider from "../VerticalDivider";
 
 type Person = {
   id: number | string;
   fullname: string;
   email: string;
   age: number;
+  contact_no: string;
+  username: string;
 };
 
 type SortConfig = {
@@ -35,18 +38,33 @@ export default function PersonTable({
   onSort,
 }: PersonTableProps) {
   const columns = [
-    { key: "id", label: "ID" },
-    { key: "fullname", label: "Fullname" },
-    { key: "email", label: "Email" },
-    { key: "age", label: "Age" },
-    { key: "contact_no", label: "Contact Number" },
-    { key: "username", label: "Username" },
+    { key: "expand", label: "", flex: 0.5 },
+    { key: "fullname", label: "Fullname", flex: 1.2 },
+    { key: "email", label: "Email", flex: 2 },
+    { key: "age", label: "Age", flex: 0.7 },
+    { key: "contact_no", label: "Contact Number", flex: 1.5 },
+    { key: "username", label: "Username", flex: 1 },
   ];
-  const { width: screenWidth } = useWindowDimensions();
+  const [expandedRowId, setExpandedRowId] = React.useState<
+    number | string | null
+  >(null);
 
   const renderHeader = () => (
     <View style={styles.row}>
       {columns.map((col) => {
+        if (col.key === "expand") {
+          return (
+            <View
+              key="expand"
+              style={[
+                styles.cell,
+                styles.header,
+                styles.expandCell,
+                { flex: col.flex },
+              ]}
+            />
+          );
+        }
         const isSorted = sortConfig.key === col.key;
         let sortSymbol: React.ReactNode = null;
         if (isSorted) {
@@ -62,7 +80,7 @@ export default function PersonTable({
           <Pressable
             key={col.key}
             style={[styles.cell, styles.header]}
-            onPress={() => onSort(col.key)}
+            onPress={() => onSort(col.key as keyof Person)}
           >
             <Text style={styles.headerText}>
               {col.label}
@@ -74,18 +92,75 @@ export default function PersonTable({
     </View>
   );
 
-  const renderItem = ({ item }) => (
-    <View style={styles.row}>
-      {columns.map((col) => (
-        <Text key={col.key} style={styles.cell}>
-          {item[col.key]}
-        </Text>
-      ))}
-    </View>
-  );
+  const renderItem = ({ item, index }: { item: Person; index: number }) => {
+    const isExpanded = expandedRowId === item.id;
 
+    return (
+      <>
+        <View style={styles.row}>
+          <View style={[styles.cell, styles.expandCell]}>
+            <Pressable
+              onPress={() => setExpandedRowId(isExpanded ? null : item.id)}
+              style={{
+                paddingHorizontal: 10,
+                paddingVertical: 5,
+                borderRadius: 20,
+                backgroundColor: "#007aff",
+              }}
+            >
+              <MaterialIcons
+                name={
+                  isExpanded ? "keyboard-arrow-down" : "keyboard-arrow-right"
+                }
+                size={20}
+              />
+            </Pressable>
+          </View>
+          <Text style={styles.cell}>{item.fullname}</Text>
+          <Text style={[styles.cell, styles.linkText]}>{item.email}</Text>
+          <Text style={[styles.cell, styles.boldText]}>{item.age}</Text>
+          <Text style={styles.cell}>{item.contact_no}</Text>
+          <Text style={styles.cell}>{item.username}</Text>
+        </View>
+
+        {isExpanded && (
+          <View style={styles.expandedContentContainer}>
+            <View style={styles.expandedCard}>
+              <Text style={styles.sectionTitle}>Customer Details</Text>
+              <HorizontalDivider />
+              <Text style={styles.detailText}>
+                <Text style={styles.label}>Name: </Text>
+                {item.fullname}
+              </Text>
+              <Text style={styles.detailText}>
+                <Text style={styles.label}>Email: </Text>
+                {item.email}
+              </Text>
+            </View>
+            <VerticalDivider />
+            <View style={styles.expandedCard}>
+              <Text style={styles.sectionTitle}>Account Details</Text>
+              <HorizontalDivider />
+              <Text style={styles.detailText}>
+                <Text style={styles.label}>Age: </Text>
+                {item.age}
+              </Text>
+              <Text style={styles.detailText}>
+                <Text style={styles.label}>Contact: </Text>
+                {item.contact_no}
+              </Text>
+              <Text style={styles.detailText}>
+                <Text style={styles.label}>Username: </Text>
+                {item.username}
+              </Text>
+            </View>
+          </View>
+        )}
+      </>
+    );
+  };
   return (
-    <ScrollView style={styles.scroll}>
+    <ScrollView style={styles.scroll} horizontal>
       <View style={styles.table}>
         {renderHeader()}
         <FlatList
@@ -106,14 +181,13 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   table: {
-    minWidth: 800, // Force scrolling if screen is narrower
+    minWidth: Dimensions.get("window").width, // Add extra room for right-most columns
     flexGrow: 1,
   },
   row: {
     flexDirection: "row",
     borderBottomWidth: 1,
     borderColor: "#ccc",
-    
   },
   cell: {
     flex: 1,
@@ -124,5 +198,47 @@ const styles = StyleSheet.create({
   },
   headerText: {
     fontWeight: "bold",
+  },
+  expandCell: {
+    flex: 0.5,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  linkText: {
+    color: "#007aff",
+    textDecorationLine: "underline",
+  },
+  boldText: {
+    fontWeight: "bold",
+  },
+  expandedContentContainer: {
+    flexDirection: "row",
+    backgroundColor: "#fdfdfd",
+    padding: 16,
+    borderBottomWidth: 1,
+    borderColor: "#ccc",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+  },
+  expandedCard: {
+    flex: 1,
+    minWidth: "48%",
+    backgroundColor: "transparent",
+    padding: 5,
+  },
+  sectionTitle: {
+    fontWeight: "bold",
+    fontSize: 16,
+    marginBottom: 8,
+    color: "#333",
+  },
+  detailText: {
+    fontSize: 14,
+    marginBottom: 4,
+    color: "#444",
+  },
+  label: {
+    fontWeight: "bold",
+    color: "#222",
   },
 });
