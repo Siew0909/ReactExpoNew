@@ -5,7 +5,6 @@ import {
   Dimensions,
   FlatList,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   View,
@@ -38,12 +37,9 @@ export default function PersonTable({
   onSort,
 }: PersonTableProps) {
   const columns = [
-    { key: "expand", label: "", flex: 0.5 },
-    { key: "fullname", label: "Fullname", flex: 1.2 },
-    { key: "email", label: "Email", flex: 2 },
-    { key: "age", label: "Age", flex: 0.7 },
-    { key: "contact_no", label: "Contact Number", flex: 1.5 },
-    { key: "username", label: "Username", flex: 1 },
+    { key: "expand", label: "", width: 0.5 },
+    { key: "fullname", label: "Fullname", width: 1.2 },
+    { key: "contact_no", label: "Contact Number", width: 1.5 },
   ];
   const [expandedRowId, setExpandedRowId] = React.useState<
     number | string | null
@@ -60,7 +56,7 @@ export default function PersonTable({
                 styles.cell,
                 styles.header,
                 styles.expandCell,
-                { flex: col.flex },
+                { width: col.width },
               ]}
             />
           );
@@ -117,10 +113,7 @@ export default function PersonTable({
             </Pressable>
           </View>
           <Text style={styles.cell}>{item.fullname}</Text>
-          <Text style={[styles.cell, styles.linkText]}>{item.email}</Text>
-          <Text style={[styles.cell, styles.boldText]}>{item.age}</Text>
           <Text style={styles.cell}>{item.contact_no}</Text>
-          <Text style={styles.cell}>{item.username}</Text>
         </View>
 
         {isExpanded && (
@@ -160,7 +153,7 @@ export default function PersonTable({
     );
   };
   return (
-    <ScrollView style={styles.scroll} horizontal>
+    <View style={styles.scroll}>
       <View style={styles.table}>
         {renderHeader()}
         <FlatList
@@ -170,10 +163,9 @@ export default function PersonTable({
           contentContainerStyle={{ paddingBottom: 100 }} // give breathing room at the bottom
         />
       </View>
-    </ScrollView>
+    </View>
   );
 }
-
 const screenWidth = Dimensions.get("window").width;
 
 const styles = StyleSheet.create({
@@ -181,7 +173,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   table: {
-    minWidth: Dimensions.get("window").width, // Add extra room for right-most columns
+    minWidth: screenWidth < 600 ? screenWidth : undefined,
     flexGrow: 1,
   },
   row: {
@@ -192,6 +184,7 @@ const styles = StyleSheet.create({
   cell: {
     flex: 1,
     padding: 12,
+    userSelect: "text",
   },
   header: {
     backgroundColor: "#e0e0e0",
