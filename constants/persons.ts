@@ -26,7 +26,7 @@ export enum Role {
 export const persons: Person[] = [
   {
     id: 1,
-    fullname: "Alice",
+    fullname: "Alice the name which is contained more than 50 characters which see does it handle the spacing or cause the space corruptted",
     email: "alice@example.com",
     age: 25,
     contact_no: "6580800808",
