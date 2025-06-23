@@ -26,7 +26,7 @@ const REFRESH_TOKEN_KEY = "user_refresh_token";
 
 const CLIENT_ID = 2;
 const CLIENT_SECRET = "irbHZjOxkn2tWNUJbdxFWtsDDZrfOQmEXCY0BXZS";
-const INACTIVITY_LIMIT = 1 * 60 * 1000; // 10 seconds for testing, adjust as needed
+const INACTIVITY_LIMIT = 3 * 60 * 1000; // 3 minutes in milliseconds
 
 const AuthContext = createContext<AuthProps>({});
 export const useAuth = () => useContext(AuthContext);
