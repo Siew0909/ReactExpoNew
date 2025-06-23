@@ -3,7 +3,7 @@ import api, { setLogoutAndRedirectFunction } from "@/shared/api/api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { AppState } from "react-native";
+import { AppState, Platform } from "react-native";
 
 interface AuthProps {
   authState?: AuthState;
@@ -26,7 +26,7 @@ const REFRESH_TOKEN_KEY = "user_refresh_token";
 
 const CLIENT_ID = 2;
 const CLIENT_SECRET = "irbHZjOxkn2tWNUJbdxFWtsDDZrfOQmEXCY0BXZS";
-const INACTIVITY_LIMIT = 3 * 60 * 1000; // 3 minutes in milliseconds
+const INACTIVITY_LIMIT = 3 * 60 * 1000; // 3 minutes
 
 const AuthContext = createContext<AuthProps>({});
 export const useAuth = () => useContext(AuthContext);
@@ -38,50 +38,66 @@ export const AuthProvider = ({ children }: any) => {
     username: null,
     roles: null,
   });
+
   const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const logoutTime = useRef<number | null>(null);
+
+  const clearInactivityTimer = () => {
+    if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
+    if (countdownTimer.current) clearInterval(countdownTimer.current);
+    logoutTime.current = null;
+  };
 
   const startInactivityTimer = () => {
     clearInactivityTimer();
+    logoutTime.current = Date.now() + INACTIVITY_LIMIT;
+
     inactivityTimer.current = setTimeout(async () => {
+      console.log("⏰ Auto logout due to inactivity");
       await logout();
       router.replace("/login");
     }, INACTIVITY_LIMIT);
-  };
 
-  const clearInactivityTimer = () => {
-    if (inactivityTimer.current) {
-      clearTimeout(inactivityTimer.current);
-    }
+    countdownTimer.current = setInterval(() => {
+      if (logoutTime.current) {
+        const remainingMs = logoutTime.current - Date.now();
+        const remainingSec = Math.max(0, Math.floor(remainingMs / 1000));
+        console.log(`⏳ Inactivity countdown: ${remainingSec}s`);
+      }
+    }, 1000);
   };
 
   const resetInactivityTimer = () => {
-    if (authState.authenticated) {
-      startInactivityTimer();
-    }
+    if (authState.authenticated) startInactivityTimer();
   };
 
-  // 🌐 Track activity (web + React Native AppState)
   useEffect(() => {
-    const activityEvents = ["click", "keydown", "touchstart"];
-
     const handleActivity = () => resetInactivityTimer();
 
-    activityEvents.forEach((event) => {
-      document.addEventListener(event, handleActivity);
-    });
+    // Web listeners
+    if (Platform.OS === "web") {
+      const activityEvents = ["click", "keydown", "touchstart", "mousemove"];
+      activityEvents.forEach((event) =>
+        document.addEventListener(event, handleActivity)
+      );
 
+      return () => {
+        activityEvents.forEach((event) =>
+          document.removeEventListener(event, handleActivity)
+        );
+        clearInactivityTimer();
+      };
+    }
+
+    // React Native: App comes back into foreground
     const appStateListener = AppState.addEventListener("change", (state) => {
-      if (state === "active") {
-        resetInactivityTimer();
-      }
+      if (state === "active") resetInactivityTimer();
     });
 
     return () => {
-      activityEvents.forEach((event) => {
-        document.removeEventListener(event, handleActivity);
-      });
-      clearInactivityTimer();
       appStateListener.remove();
+      clearInactivityTimer();
     };
   }, [authState.authenticated]);
 
