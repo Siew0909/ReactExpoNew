@@ -64,11 +64,12 @@ export default function Person() {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={{ marginVertical: 10 }}>
+      <PersonFilter filters={filters} onFilterChange={setFilters} />
+      <View style={{marginBottom: 30, justifyContent: 'center'}}>
         <Text style={{ marginBottom: 5 }}>Show rows:</Text>
         <Picker
           selectedValue={rowsPerPage}
-          style={{ height: 40, width: 150 }}
+          style={{ height: 30, width: 100 }}
           onValueChange={(value) => {
             setRowsPerPage(value);
             setCurrentPage(1); // Reset to first page when rows per page changes
@@ -80,8 +81,6 @@ export default function Person() {
           <Picker.Item label="50 rows" value={50} />
         </Picker>
       </View>
-
-      <PersonFilter filters={filters} onFilterChange={setFilters} />
       <PersonTable
         data={paginatedData}
         sortConfig={sortConfig}
@@ -100,6 +99,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 10,
+    paddingVertical: 20,
     backgroundColor: "#f5f5f5",
   },
 });
