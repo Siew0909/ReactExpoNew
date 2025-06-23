@@ -1,10 +1,11 @@
 // App.js
 import PersonFilter from "@/components/Filter/PersonFilter";
+import Pagination from "@/components/Table/Pagination";
 import PersonTable from "@/components/Table/PersonTable";
 import { persons } from "@/constants/persons";
+import { Picker } from "@react-native-picker/picker";
 import React, { useMemo, useState } from "react";
-import { StyleSheet } from "react-native";
-import { ScrollView } from "react-native-gesture-handler";
+import { StyleSheet, Text, View } from "react-native";
 export default function Person() {
   const [filters, setFilters] = useState({
     fullname: "",
@@ -13,7 +14,7 @@ export default function Person() {
   });
   const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const filteredData = useMemo(() => {
     let data = [...persons];
@@ -44,12 +45,12 @@ export default function Person() {
     return data;
   }, [filters, sortConfig]);
 
-  const totalCount = filteredData.length;
   const paginatedData = useMemo(() => {
     const start = (currentPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
     return filteredData.slice(start, end);
   }, [filteredData, currentPage, rowsPerPage]);
+  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
 
   // Toggle sort order (default → desc → asc → default)
   const toggleSort = (key) => {
@@ -62,21 +63,42 @@ export default function Person() {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <View style={styles.container}>
+      <View style={{ marginVertical: 10 }}>
+        <Text style={{ marginBottom: 5 }}>Show rows:</Text>
+        <Picker
+          selectedValue={rowsPerPage}
+          style={{ height: 40, width: 150 }}
+          onValueChange={(value) => {
+            setRowsPerPage(value);
+            setCurrentPage(1); // Reset to first page when rows per page changes
+          }}
+        >
+          <Picker.Item label="5 rows" value={5} />
+          <Picker.Item label="10 rows" value={10} />
+          <Picker.Item label="20 rows" value={20} />
+          <Picker.Item label="50 rows" value={50} />
+        </Picker>
+      </View>
+
       <PersonFilter filters={filters} onFilterChange={setFilters} />
       <PersonTable
-        data={filteredData}
+        data={paginatedData}
         sortConfig={sortConfig}
         onSort={toggleSort}
       />
-    </ScrollView>
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 50,
     paddingHorizontal: 10,
     backgroundColor: "#f5f5f5",
   },
