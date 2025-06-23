@@ -46,7 +46,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 20,
     gap: 12,
   },
   pageButton: {

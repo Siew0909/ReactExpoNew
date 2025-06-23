@@ -160,7 +160,9 @@ export default function PersonTable({
           data={data}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 100 }} // give breathing room at the bottom
+          contentContainerStyle={{ paddingBottom: 30 }}
+          nestedScrollEnabled={true}
+          scrollEnabled={false}
         />
       </View>
     </View>

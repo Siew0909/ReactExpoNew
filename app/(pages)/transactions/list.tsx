@@ -4,7 +4,7 @@ import Pagination from "@/components/Table/Pagination";
 import TransactionTable from "@/components/Table/TransactionTable";
 import { transactions } from "@/constants/transactions";
 import React, { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, View, Text } from "react-native";
+import { StyleSheet, View, Text, ScrollView } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
 export default function TransactionList() {
@@ -57,7 +57,7 @@ export default function TransactionList() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={{ marginVertical: 10 }}>
         <Text style={{ marginBottom: 5 }}>Show rows:</Text>
         <Picker
@@ -79,7 +79,7 @@ export default function TransactionList() {
         filters={filters}
         onFilterChange={(newFilters) => {
           setFilters(newFilters);
-          setCurrentPage(1); // 👈 Reset to first page on filter change
+          setCurrentPage(1);
         }}
       />
       <TransactionTable
@@ -92,7 +92,7 @@ export default function TransactionList() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
-    </View>
+    </ScrollView>
   );
 }
 

@@ -164,7 +164,9 @@ export default function TransactionTable({ data, sortConfig, onSort }: Props) {
             data={data}
             keyExtractor={(item) => item.trx_id}
             renderItem={renderItem}
-            contentContainerStyle={{ paddingBottom: 100 }}
+            contentContainerStyle={{ paddingBottom: 30 }}
+            nestedScrollEnabled={true}
+            scrollEnabled={false}
           />
         )}
       </View>

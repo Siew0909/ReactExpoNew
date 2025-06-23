@@ -5,7 +5,7 @@ import PersonTable from "@/components/Table/PersonTable";
 import { persons } from "@/constants/persons";
 import { Picker } from "@react-native-picker/picker";
 import React, { useMemo, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 export default function Person() {
   const [filters, setFilters] = useState({
     fullname: "",
@@ -63,7 +63,7 @@ export default function Person() {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container}>
       <View style={{ marginVertical: 10 }}>
         <Text style={{ marginBottom: 5 }}>Show rows:</Text>
         <Picker
@@ -92,7 +92,7 @@ export default function Person() {
         totalPages={totalPages}
         onPageChange={setCurrentPage}
       />
-    </View>
+    </ScrollView>
   );
 }
 
