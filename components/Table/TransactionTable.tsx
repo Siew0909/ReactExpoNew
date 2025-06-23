@@ -26,12 +26,10 @@ type Item = {
 };
 
 type Transaction = {
-  trx_id: string;
+  id: string;
   transaction_date: string;
-  customer_name: string;
-  number_id: string;
-  msisdn: string;
-  amount: number;
+  selected_msisdn: string;
+  total: number;
   items: Item[];
 };
 
@@ -49,8 +47,8 @@ type Props = {
 export default function TransactionTable({ data, sortConfig, onSort }: Props) {
   const columns = [
     { key: "expand", label: "", width: 0.5 },
-    { key: "trx_id", label: "Transaction ID", width: 2 },
-    { key: "customer_name", label: "Customer", width: 1.5 },
+    { key: "id", label: "Transaction ID", width: 2 },
+    { key: "msisdn", label: "MSISDN", width: 1.5 },
     { key: "amount", label: "Amount", width: 1 },
   ];
 
@@ -87,13 +85,13 @@ export default function TransactionTable({ data, sortConfig, onSort }: Props) {
   );
 
   const renderItem = ({ item }: { item: Transaction }) => {
-    const isExpanded = expandedRowId === item.trx_id;
+    const isExpanded = expandedRowId === item.id;
     return (
       <>
         <View style={styles.row}>
           <View style={[styles.cell, styles.expandCell]}>
             <Pressable
-              onPress={() => setExpandedRowId(isExpanded ? null : item.trx_id)}
+              onPress={() => setExpandedRowId(isExpanded ? null : item.id)}
               style={styles.expandButton}
             >
               <MaterialIcons
@@ -104,9 +102,9 @@ export default function TransactionTable({ data, sortConfig, onSort }: Props) {
               />
             </Pressable>
           </View>
-          <Text style={styles.cell}>{item.trx_id}</Text>
-          <Text style={styles.cell}>{item.customer_name}</Text>
-          <Text style={styles.cell}>${item.amount}</Text>
+          <Text style={styles.cell}>{item.id}</Text>
+          <Text style={styles.cell}>{item.selected_msisdn}</Text>
+          <Text style={styles.cell}>${item.total}</Text>
         </View>
 
         {isExpanded && (
@@ -116,15 +114,11 @@ export default function TransactionTable({ data, sortConfig, onSort }: Props) {
               <HorizontalDivider />
               <Text style={styles.detailText}>
                 <Text style={styles.label}>MSISDN: </Text>
-                {item.msisdn}
+                {item.selected_msisdn}
               </Text>
               <Text style={styles.detailText}>
                 <Text style={styles.label}>Date: </Text>
                 {item.transaction_date}
-              </Text>
-              <Text style={styles.detailText}>
-                <Text style={styles.label}>Number ID: </Text>
-                {item.number_id}
               </Text>
             </View>
             <VerticalDivider />
@@ -162,7 +156,7 @@ export default function TransactionTable({ data, sortConfig, onSort }: Props) {
         ) : (
           <FlatList
             data={data}
-            keyExtractor={(item) => item.trx_id}
+            keyExtractor={(item) => item.id}
             renderItem={renderItem}
             contentContainerStyle={{ paddingBottom: 30 }}
             nestedScrollEnabled={true}

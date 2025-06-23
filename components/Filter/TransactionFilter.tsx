@@ -3,16 +3,14 @@ import { StyleSheet, TextInput, View } from "react-native";
 
 type TransactionFilterProps = {
   filters: {
-    trx_id?: string;
+    id?: string;
     transaction_date?: string;
-    customer_name?: string;
-    number_id?: string;
     msisdn?: string;
   };
   onFilterChange: (filters: { [key: string]: string | undefined }) => void;
 };
 
-const filterKeys = ["trx_id", "transaction_date", "customer_name", "number_id", "msisdn"];
+const filterKeys = ["id", "transaction_date", "msisdn"];
 
 export default function TransactionFilter({
   filters,
@@ -28,7 +26,7 @@ export default function TransactionFilter({
         <View key={key} style={styles.filterItem}>
           <TextInput
             style={styles.input}
-            placeholder={key
+            placeholder={key === 'id' ? 'Transaction Code' :key
               .replace(/_/g, " ")
               .replace(/\b\w/g, (char) => char.toUpperCase())}
             value={filters[key]}

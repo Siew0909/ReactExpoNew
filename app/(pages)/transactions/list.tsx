@@ -1,53 +1,40 @@
-// app/transaction/index.tsx
+// app/transactions/list.tsx
 import TransactionFilter from "@/components/Filter/TransactionFilter";
 import Pagination from "@/components/Table/Pagination";
 import TransactionTable from "@/components/Table/TransactionTable";
-import { transactions } from "@/constants/transactions";
+import { useTransactionsQuery } from "@/shared/api/transactions";
 import React, { useMemo, useState } from "react";
-import { StyleSheet, View, Text, ScrollView } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 
 export default function TransactionList() {
   const [filters, setFilters] = useState({
-    trx_id: "",
+    id: "", // maps to `receipt_code`
     msisdn: "",
     customer_name: "",
   });
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+
+  const [sortConfig, setSortConfig] = useState<{
+    key: string | null;
+    direction: "asc" | "desc" | null;
+  }>({ key: null, direction: null });
+
   const [currentPage, setCurrentPage] = useState(1);
   const [rowsPerPage, setRowsPerPage] = useState(10);
 
-  const filteredData = useMemo(() => {
-    let data = [...transactions];
+  const apiFilters = useMemo(() => {
+    return {
+      receipt_code: filters.id,
+      msisdn: filters.msisdn,
+      fullname: filters.customer_name,
+      page: currentPage,
+      limit: rowsPerPage,
+    };
+  }, [filters, currentPage, rowsPerPage]);
 
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) {
-        data = data.filter((item) =>
-          item[key]?.toString().toLowerCase().includes(value.toLowerCase())
-        );
-      }
-    });
+  const { data = [], isLoading, error } = useTransactionsQuery(apiFilters);
 
-    if (sortConfig.key && sortConfig.direction) {
-      data.sort((a, b) => {
-        const aVal = a[sortConfig.key];
-        const bVal = b[sortConfig.key];
-        if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return data;
-  }, [filters, sortConfig]);
-
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * rowsPerPage;
-    return filteredData.slice(start, start + rowsPerPage);
-  }, [filteredData, currentPage, rowsPerPage]);
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-
-  const toggleSort = (key) => {
+  const toggleSort = (key: string) => {
     setSortConfig((prev) => {
       if (prev.key !== key) return { key, direction: "desc" };
       if (prev.direction === "desc") return { key, direction: "asc" };
@@ -56,16 +43,26 @@ export default function TransactionList() {
     });
   };
 
+  const totalPages = Math.ceil((data?.length ?? 0) / rowsPerPage); // Adjust if API provides total count
+
   return (
     <ScrollView style={styles.container}>
-      <View style={{ marginVertical: 10 }}>
+      <TransactionFilter
+        filters={filters}
+        onFilterChange={(newFilters) => {
+          setFilters(newFilters);
+          setCurrentPage(1); // reset page when filters change
+        }}
+      />
+
+      <View style={{ marginBottom: 30, justifyContent: "center" }}>
         <Text style={{ marginBottom: 5 }}>Show rows:</Text>
         <Picker
           selectedValue={rowsPerPage}
-          style={{ height: 40, width: 150 }}
+          style={{ height: 30, width: 100 }}
           onValueChange={(value) => {
             setRowsPerPage(value);
-            setCurrentPage(1); // Reset to first page when rows per page changes
+            setCurrentPage(1);
           }}
         >
           <Picker.Item label="5 rows" value={5} />
@@ -75,18 +72,18 @@ export default function TransactionList() {
         </Picker>
       </View>
 
-      <TransactionFilter
-        filters={filters}
-        onFilterChange={(newFilters) => {
-          setFilters(newFilters);
-          setCurrentPage(1);
-        }}
-      />
-      <TransactionTable
-        data={paginatedData}
-        sortConfig={sortConfig}
-        onSort={toggleSort}
-      />
+      {error ? (
+        <Text style={{ color: "red", textAlign: "center" }}>
+          Failed to load transactions.
+        </Text>
+      ) : (
+        <TransactionTable
+          data={data}
+          sortConfig={sortConfig}
+          onSort={toggleSort}
+        />
+      )}
+
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -101,5 +98,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 10,
     backgroundColor: "#f5f5f5",
+    paddingVertical: 20,
   },
 });
