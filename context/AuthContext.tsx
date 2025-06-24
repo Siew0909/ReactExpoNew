@@ -40,12 +40,10 @@ export const AuthProvider = ({ children }: any) => {
   });
 
   const inactivityTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const countdownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
   const logoutTime = useRef<number | null>(null);
 
   const clearInactivityTimer = () => {
     if (inactivityTimer.current) clearTimeout(inactivityTimer.current);
-    if (countdownTimer.current) clearInterval(countdownTimer.current);
     logoutTime.current = null;
   };
 
@@ -58,14 +56,6 @@ export const AuthProvider = ({ children }: any) => {
       await logout();
       router.replace("/login");
     }, INACTIVITY_LIMIT);
-
-    countdownTimer.current = setInterval(() => {
-      if (logoutTime.current) {
-        const remainingMs = logoutTime.current - Date.now();
-        const remainingSec = Math.max(0, Math.floor(remainingMs / 1000));
-        console.log(`⏳ Inactivity countdown: ${remainingSec}s`);
-      }
-    }, 1000);
   };
 
   const resetInactivityTimer = () => {
