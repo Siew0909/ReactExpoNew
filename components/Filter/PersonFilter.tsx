@@ -3,16 +3,14 @@ import { StyleSheet, TextInput, View } from "react-native";
 
 type PersonFilterProps = {
   filters: {
-    fullname?: string;
+    name?: string;
     email?: string;
-    age?: string;
-    contact_no?: string;
-    [key: string]: string | undefined;
+    phone?: string;
   };
   onFilterChange: (filters: { [key: string]: string | undefined }) => void;
 };
 
-const filterKeys = ["fullname", "email", "age", "contact_no"];
+const filterKeys = ["name", "email", "phone"];
 
 export default function PersonFilter({
   filters,
@@ -28,9 +26,12 @@ export default function PersonFilter({
         <View key={key} style={styles.filterItem}>
           <TextInput
             style={styles.input}
-            placeholder={key
-              .replace(/_/g, " ")
-              .replace(/\b\w/g, (char) => char.toUpperCase()) // Capitalize each word
+            placeholder={
+              key === "name"
+                ? "Full Name"
+                : key
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (char) => char.toUpperCase()) // Capitalize each word
             }
             value={filters[key]}
             onChangeText={(text) => handleChange(key, text)}

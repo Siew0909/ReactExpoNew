@@ -2,6 +2,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Pressable,
@@ -13,12 +14,12 @@ import HorizontalDivider from "../Dividers/HorizontalDivider";
 import VerticalDivider from "../VerticalDivider";
 
 type Person = {
-  id: number | string;
-  fullname: string;
+  id: number;
+  name: string;
   email: string;
-  age: number;
-  contact_no: string;
+  phone: string;
   username: string;
+  isLoading?: boolean;
 };
 
 type SortConfig = {
@@ -29,17 +30,19 @@ type PersonTableProps = {
   data: Person[];
   sortConfig: SortConfig;
   onSort: (key: keyof Person) => void;
+  isLoading?: boolean;
 };
 
 export default function PersonTable({
   data,
   sortConfig,
   onSort,
+  isLoading,
 }: PersonTableProps) {
   const columns = [
     { key: "expand", label: "", width: 0.5 },
-    { key: "fullname", label: "Fullname", width: 1.2 },
-    { key: "contact_no", label: "Contact Number", width: 1.5 },
+    { key: "name", label: "Fullname", width: 1.2 },
+    { key: "phone", label: "Contact Number", width: 1.5 },
   ];
   const [expandedRowId, setExpandedRowId] = React.useState<
     number | string | null
@@ -112,8 +115,8 @@ export default function PersonTable({
               />
             </Pressable>
           </View>
-          <Text style={styles.cell}>{item.fullname}</Text>
-          <Text style={styles.cell}>{item.contact_no}</Text>
+          <Text style={styles.cell}>{item.name}</Text>
+          <Text style={styles.cell}>{item.phone}</Text>
         </View>
 
         {isExpanded && (
@@ -123,7 +126,7 @@ export default function PersonTable({
               <HorizontalDivider />
               <Text style={styles.detailText}>
                 <Text style={styles.label}>Name: </Text>
-                {item.fullname}
+                {item.name}
               </Text>
               <Text style={styles.detailText}>
                 <Text style={styles.label}>Email: </Text>
@@ -135,12 +138,8 @@ export default function PersonTable({
               <Text style={styles.sectionTitle}>Account Details</Text>
               <HorizontalDivider />
               <Text style={styles.detailText}>
-                <Text style={styles.label}>Age: </Text>
-                {item.age}
-              </Text>
-              <Text style={styles.detailText}>
                 <Text style={styles.label}>Contact: </Text>
-                {item.contact_no}
+                {item.phone}
               </Text>
               <Text style={styles.detailText}>
                 <Text style={styles.label}>Username: </Text>
@@ -156,14 +155,22 @@ export default function PersonTable({
     <View style={styles.scroll}>
       <View style={styles.table}>
         {renderHeader()}
-        <FlatList
-          data={data}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderItem}
-          contentContainerStyle={{ paddingBottom: 30 }}
-          nestedScrollEnabled={true}
-          scrollEnabled={false}
-        />
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007aff" />
+          </View>
+        ) : data.length === 0 ? (
+          <Text style={styles.noDataText}>No Data Record</Text>
+        ) : (
+          <FlatList
+            data={data}
+            keyExtractor={(item) => item.id}
+            renderItem={renderItem}
+            contentContainerStyle={{ paddingBottom: 30 }}
+            nestedScrollEnabled={true}
+            scrollEnabled={false}
+          />
+        )}
       </View>
     </View>
   );
@@ -178,6 +185,18 @@ const styles = StyleSheet.create({
     minWidth: screenWidth < 600 ? screenWidth : undefined,
     flexGrow: 1,
   },
+  noDataText: {
+    textAlign: "center",
+    padding: 20,
+    color: "#888",
+    fontStyle: "italic",
+  },
+  loadingContainer: {
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+
   row: {
     flexDirection: "row",
     borderBottomWidth: 1,

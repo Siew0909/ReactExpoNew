@@ -1,59 +1,69 @@
-// App.js
+// app/persons/index.tsx
 import PersonFilter from "@/components/Filter/PersonFilter";
 import Pagination from "@/components/Table/Pagination";
 import PersonTable from "@/components/Table/PersonTable";
-import { persons } from "@/constants/persons";
-import { Picker } from "@react-native-picker/picker";
+import ShowRowsSelector from "@/components/Table/ShowRow";
+import { usePersonsQuery } from "@/shared/api/persons";
 import React, { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-export default function Person() {
-  const [filters, setFilters] = useState({
-    fullname: "",
-    email: "",
-    age: "",
-  });
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: null });
+import { ScrollView, StyleSheet, Text } from "react-native";
+
+export default function PersonList() {
+const [filters, setFilters] = useState({
+  name: "",
+  phone: "",
+  email: "",
+});
+
+  const [sortConfig, setSortConfig] = useState<{
+    key: string | null;
+    direction: "asc" | "desc" | null;
+  }>({ key: null, direction: null });
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
 
-  const filteredData = useMemo(() => {
-    let data = [...persons];
+  const apiFilters = useMemo(() => {
+    return {
+      ...filters,
+      page: currentPage,
+      limit: rowsPerPage,
+    };
+  }, [filters, currentPage, rowsPerPage]);
 
-    (Object.keys(filters) as Array<keyof typeof filters>).forEach((key) => {
-      let value = filters[key];
-      if (value) {
-        if (key === "contact_no" && !value.startsWith("65")) {
-          value = "65" + value;
-        }
+  const { data, isLoading, error } = usePersonsQuery(apiFilters);
 
-        data = data.filter((item) =>
-          item[key]?.toString().toLowerCase().includes(value.toLowerCase())
-        );
+  const totalPages = data?.pagination?.last_page ?? "";
+  const persons =
+    data?.data.map((p) => ({
+      id: p.user_id ?? p.id,
+      name: p.name ?? "",
+      email: p.email ?? "",
+      phone: p.phone ?? "",
+      username: p.username ?? "",
+    })) ?? [];
+
+  const getSortedPersons = () => {
+    if (!sortConfig.key || !sortConfig.direction) return persons;
+
+    return [...persons].sort((a, b) => {
+      const valA = a[sortConfig.key];
+      const valB = b[sortConfig.key];
+
+      if (typeof valA === "string" && typeof valB === "string") {
+        return sortConfig.direction === "asc"
+          ? valA.localeCompare(valB)
+          : valB.localeCompare(valA);
       }
+
+      if (typeof valA === "number" && typeof valB === "number") {
+        return sortConfig.direction === "asc" ? valA - valB : valB - valA;
+      }
+
+      return 0;
     });
+  };
 
-    if (sortConfig.key && sortConfig.direction) {
-      data.sort((a, b) => {
-        const aVal = a[sortConfig.key];
-        const bVal = b[sortConfig.key];
-        if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
-        if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
-        return 0;
-      });
-    }
-
-    return data;
-  }, [filters, sortConfig]);
-
-  const paginatedData = useMemo(() => {
-    const start = (currentPage - 1) * rowsPerPage;
-    const end = start + rowsPerPage;
-    return filteredData.slice(start, end);
-  }, [filteredData, currentPage, rowsPerPage]);
-  const totalPages = Math.ceil(filteredData.length / rowsPerPage);
-
-  // Toggle sort order (default → desc → asc → default)
-  const toggleSort = (key) => {
+  const toggleSort = (key: string) => {
     setSortConfig((prev) => {
       if (prev.key !== key) return { key, direction: "desc" };
       if (prev.direction === "desc") return { key, direction: "asc" };
@@ -64,28 +74,35 @@ export default function Person() {
 
   return (
     <ScrollView style={styles.container}>
-      <PersonFilter filters={filters} onFilterChange={setFilters} />
-      <View style={{marginBottom: 30, justifyContent: 'center'}}>
-        <Text style={{ marginBottom: 5 }}>Show rows:</Text>
-        <Picker
-          selectedValue={rowsPerPage}
-          style={{ height: 30, width: 100 }}
-          onValueChange={(value) => {
-            setRowsPerPage(value);
-            setCurrentPage(1); // Reset to first page when rows per page changes
-          }}
-        >
-          <Picker.Item label="5 rows" value={5} />
-          <Picker.Item label="10 rows" value={10} />
-          <Picker.Item label="20 rows" value={20} />
-          <Picker.Item label="50 rows" value={50} />
-        </Picker>
-      </View>
-      <PersonTable
-        data={paginatedData}
-        sortConfig={sortConfig}
-        onSort={toggleSort}
+      <PersonFilter
+        filters={filters}
+        onFilterChange={(newFilters) => {
+          setFilters(newFilters);
+          setCurrentPage(1); // reset page on filter change
+        }}
       />
+
+      <ShowRowsSelector
+        rowsPerPage={rowsPerPage}
+        onChange={(value) => {
+          setRowsPerPage(value);
+          setCurrentPage(1); // reset page on row count change
+        }}
+      />
+
+      {error ? (
+        <Text style={{ color: "red", textAlign: "center" }}>
+          Failed to load persons.
+        </Text>
+      ) : (
+        <PersonTable
+          data={getSortedPersons()}
+          sortConfig={sortConfig}
+          onSort={toggleSort}
+          isLoading={isLoading}
+        />
+      )}
+
       <Pagination
         currentPage={currentPage}
         totalPages={totalPages}
@@ -99,7 +116,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingHorizontal: 10,
-    paddingVertical: 20,
     backgroundColor: "#f5f5f5",
+    paddingVertical: 20,
   },
 });
