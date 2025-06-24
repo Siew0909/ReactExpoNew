@@ -39,13 +39,13 @@ export default function TransactionList() {
 
   // Pagination info:
   const totalPages = data?.pagination?.last_page ?? '';
-const getSortedTransactions = () => {
-  if (!transactions || !sortConfig.key || !sortConfig.direction) {
-    return transactions;
+  const getSortedTransactions = () => {
+    if (!transactions || !sortConfig.key || !sortConfig.direction) {
+      return transactions;
   }
 
   const sorted = [...transactions].sort((a, b) => {
-    const key = sortConfig.key as keyof Transaction;
+    const key = sortConfig.key;
     const valA = a[key];
     const valB = b[key];
 
