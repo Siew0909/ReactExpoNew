@@ -16,9 +16,19 @@ export interface TransactionsFilter {
   limit?: number;
 }
 
+type TransactionAPIResponse = {
+  data: Transaction[];
+  pagination: {
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+  };
+};
+
 const fetchTransactions = async (
   filters: TransactionsFilter
-): Promise<Transaction[]> => {
+): Promise<TransactionAPIResponse> => {
   try {
     const params = new URLSearchParams();
 
@@ -40,8 +50,8 @@ const fetchTransactions = async (
 
     const url = `/transactions?${params.toString()}`;
 
-    const response = await api.get<{ data: Transaction[] }>(url);
-    return response.data.data;
+    const response = await api.get<TransactionAPIResponse>(url);
+    return response.data;
   } catch (error) {
     console.error("Error fetching transactions:", error);
     throw new Error("Failed to fetch transactions"); // Re-throw for React Query error handling
@@ -49,11 +59,11 @@ const fetchTransactions = async (
 };
 
 export function useTransactionsQuery(filters: TransactionsFilter) {
-  return useQuery<Transaction[], Error>({
+  return useQuery<TransactionAPIResponse, Error>({
     queryKey: ["transactions", filters],
     queryFn: () => fetchTransactions(filters),
-    // Optional: Add a staleTime if you want data to be considered fresh for a bit
-    // staleTime: 1000 * 60 * 5, // 5 minutes
+    staleTime: 1000 * 60 * 5, // 5 min fresh
+    cacheTime: 1000 * 60 * 10, // 10 min memory cached
     // keepPreviousData: true, // Show old data while new data is loading (good UX for filters)
   });
 }
