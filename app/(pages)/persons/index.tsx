@@ -73,7 +73,7 @@ const [filters, setFilters] = useState({
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       <PersonFilter
         filters={filters}
         onFilterChange={(newFilters) => {
@@ -118,5 +118,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     backgroundColor: "#f5f5f5",
     paddingVertical: 20,
+  },
+  scrollContent: {
+    paddingBottom: 80, // ensures bottom spacing for pagination on small screens
   },
 });
