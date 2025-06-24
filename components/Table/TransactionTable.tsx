@@ -2,6 +2,7 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useState } from "react";
 import {
+  ActivityIndicator,
   Dimensions,
   FlatList,
   Pressable,
@@ -42,14 +43,15 @@ type Props = {
   data: Transaction[];
   sortConfig: SortConfig;
   onSort: (key: keyof Transaction) => void;
+  isLoading?: boolean;
 };
 
-export default function TransactionTable({ data, sortConfig, onSort }: Props) {
+export default function TransactionTable({ data, sortConfig, onSort, isLoading}: Props) {
   const columns = [
     { key: "expand", label: "", width: 0.5 },
     { key: "id", label: "Transaction ID", width: 2 },
-    { key: "msisdn", label: "MSISDN", width: 1.5 },
-    { key: "amount", label: "Amount", width: 1 },
+    { key: "selected_msisdn", label: "MSISDN", width: 1.5 },
+    { key: "total", label: "Amount", width: 1 },
   ];
 
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
@@ -58,7 +60,12 @@ export default function TransactionTable({ data, sortConfig, onSort }: Props) {
     <View style={styles.row}>
       {columns.map((col) => {
         if (col.key === "expand") {
-          return <View key="expand" style={[styles.cell, styles.expandCell, styles.header]} />;
+          return (
+            <View
+              key="expand"
+              style={[styles.cell, styles.expandCell, styles.header]}
+            />
+          );
         }
         const isSorted = sortConfig.key === col.key;
         const sortSymbol = isSorted ? (
@@ -151,7 +158,11 @@ export default function TransactionTable({ data, sortConfig, onSort }: Props) {
     <View style={styles.scroll}>
       <View style={styles.table}>
         {renderHeader()}
-        {data.length === 0 ? (
+        {isLoading ? (
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007aff" />
+          </View>
+        ) : data.length === 0 ? (
           <Text style={styles.noDataText}>No Data Record</Text>
         ) : (
           <FlatList
@@ -184,7 +195,11 @@ const styles = StyleSheet.create({
     color: "#888",
     fontStyle: "italic",
   },
-
+  loadingContainer: {
+    padding: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   row: {
     flexDirection: "row",
     borderBottomWidth: 1,

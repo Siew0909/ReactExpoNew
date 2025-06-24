@@ -1,11 +1,11 @@
 // app/transactions/list.tsx
 import TransactionFilter from "@/components/Filter/TransactionFilter";
 import Pagination from "@/components/Table/Pagination";
+import ShowRowsSelector from "@/components/Table/ShowRow";
 import TransactionTable from "@/components/Table/TransactionTable";
 import { useTransactionsQuery } from "@/shared/api/transactions";
 import React, { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { ScrollView, StyleSheet, Text } from "react-native";
 
 export default function TransactionList() {
   const [filters, setFilters] = useState({
@@ -20,7 +20,7 @@ export default function TransactionList() {
   }>({ key: null, direction: null });
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(50);
 
   const apiFilters = useMemo(() => {
     return {
@@ -32,7 +32,38 @@ export default function TransactionList() {
     };
   }, [filters, currentPage, rowsPerPage]);
 
-  const { data = [], isLoading, error } = useTransactionsQuery(apiFilters);
+  const { data, isLoading, error } = useTransactionsQuery(apiFilters);
+
+  // Transactions array:
+  const transactions = data?.data ?? [];
+
+  // Pagination info:
+  const totalPages = data?.pagination?.last_page ?? '';
+const getSortedTransactions = () => {
+  if (!transactions || !sortConfig.key || !sortConfig.direction) {
+    return transactions;
+  }
+
+  const sorted = [...transactions].sort((a, b) => {
+    const key = sortConfig.key as keyof Transaction;
+    const valA = a[key];
+    const valB = b[key];
+
+    if (typeof valA === "string" && typeof valB === "string") {
+      return sortConfig.direction === "asc"
+        ? valA.localeCompare(valB)
+        : valB.localeCompare(valA);
+    }
+
+    if (typeof valA === "number" && typeof valB === "number") {
+      return sortConfig.direction === "asc" ? valA - valB : valB - valA;
+    }
+
+    return 0;
+  });
+
+  return sorted;
+};
 
   const toggleSort = (key: string) => {
     setSortConfig((prev) => {
@@ -42,8 +73,6 @@ export default function TransactionList() {
       return { key, direction: "desc" };
     });
   };
-
-  const totalPages = Math.ceil((data?.length ?? 0) / rowsPerPage); // Adjust if API provides total count
 
   return (
     <ScrollView style={styles.container}>
@@ -55,22 +84,13 @@ export default function TransactionList() {
         }}
       />
 
-      <View style={{ marginBottom: 30, justifyContent: "center" }}>
-        <Text style={{ marginBottom: 5 }}>Show rows:</Text>
-        <Picker
-          selectedValue={rowsPerPage}
-          style={{ height: 30, width: 100 }}
-          onValueChange={(value) => {
-            setRowsPerPage(value);
-            setCurrentPage(1);
-          }}
-        >
-          <Picker.Item label="5 rows" value={5} />
-          <Picker.Item label="10 rows" value={10} />
-          <Picker.Item label="20 rows" value={20} />
-          <Picker.Item label="50 rows" value={50} />
-        </Picker>
-      </View>
+      <ShowRowsSelector
+        rowsPerPage={rowsPerPage}
+        onChange={(value) => {
+          setRowsPerPage(value);
+          setCurrentPage(1);
+        }}
+      />
 
       {error ? (
         <Text style={{ color: "red", textAlign: "center" }}>
@@ -78,9 +98,10 @@ export default function TransactionList() {
         </Text>
       ) : (
         <TransactionTable
-          data={data}
+          data={getSortedTransactions()}
           sortConfig={sortConfig}
           onSort={toggleSort}
+          isLoading={isLoading}
         />
       )}
 
