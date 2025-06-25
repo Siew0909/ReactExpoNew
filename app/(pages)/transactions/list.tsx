@@ -20,7 +20,7 @@ export default function TransactionList() {
   }>({ key: null, direction: null });
 
   const [currentPage, setCurrentPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(50);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
 
   const apiFilters = useMemo(() => {
     return {
