@@ -47,11 +47,10 @@ export const routes: AppRoute[] = [
     path: "(pages)/persons",
     icon: "person",
   },
-
   {
     type: "dropdown",
     name: "Transaction",
-    permission: ["admin"],
+    permission: ["admin", "manager"],
     items: [
       { title: "List", href: "(pages)/transactions/list" },
       { title: "Refund", href: "(pages)/transactions/refund" },
@@ -60,17 +59,12 @@ export const routes: AppRoute[] = [
     icon: "money",
   },
   {
-    type: "link",
-    permission: ["admin", "user"],
-    name: "Profile",
-    path: "(pages)/profile",
-    icon: "person",
-  },
-  {
-    type: "link",
-    permission: ["admin", "user", "manager"],
+    type: "dropdown",
     name: "Settings",
-    path: "(pages)/settings",
+    permission: ["admin", "manager"],
+    items: [
+      { title: "Profile", href: "(pages)/profile" },
+    ],
     icon: "settings",
   },
 ];
