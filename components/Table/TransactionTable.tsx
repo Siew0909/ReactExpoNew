@@ -1,4 +1,5 @@
 // components/Table/TransactionTable.tsx
+import { isMobileWidth } from "@/shared/utils/constants";
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import React, { useState } from "react";
 import {
@@ -10,6 +11,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { ScrollView } from "react-native-gesture-handler";
 import HorizontalDivider from "../Dividers/HorizontalDivider";
 import VerticalDivider from "../VerticalDivider";
 
@@ -55,8 +57,8 @@ export default function TransactionTable({
   isLoading,
 }: Props) {
   const columns = [
-    { key: "expand", label: "", width: 0.5 },
-    { key: "id", label: "Transaction ID", width: 2 },
+    { key: "expand", label: "", width: 1 },
+    { key: "id", label: "Transaction ID", width: isMobileWidth ? 2 : 3 },
     { key: "selected_msisdn", label: "MSISDN", width: 1.5 },
     { key: "total", label: "Amount", width: 1 },
   ];
@@ -96,7 +98,11 @@ export default function TransactionTable({
         return (
           <Pressable
             key={col.key}
-            style={[styles.cell, styles.header, { flex: columnWidths[col.key] }]}
+            style={[
+              styles.cell,
+              styles.header,
+              { flex: columnWidths[col.key] },
+            ]}
             onPress={() => onSort(col.key as keyof Transaction)}
           >
             <Text style={styles.headerText}>
@@ -118,7 +124,11 @@ export default function TransactionTable({
           }
         >
           <View
-            style={[styles.cell, styles.expandCell, { flex: columnWidths["expand"] }]}
+            style={[
+              styles.cell,
+              styles.expandCell,
+              { flex: columnWidths["expand"] },
+            ]}
           >
             <Pressable
               onPress={() => setExpandedRowId(isExpanded ? null : item.id)}
@@ -132,10 +142,16 @@ export default function TransactionTable({
               />
             </Pressable>
           </View>
-          <Text style={[styles.cell, { flex: columnWidths["id"] }]}>
+          <Text
+            style={[styles.cell, { flex: columnWidths["id"] }]}
+            numberOfLines={1}
+            ellipsizeMode="tail"
+          >
             {item.id}
           </Text>
-          <Text style={[styles.cell, { flex: columnWidths["selected_msisdn"] }]}>
+          <Text
+            style={[styles.cell, { flex: columnWidths["selected_msisdn"] }]}
+          >
             {item.selected_msisdn}
           </Text>
           <Text
@@ -184,7 +200,7 @@ export default function TransactionTable({
   };
 
   return (
-    <View style={styles.scroll}>
+    <ScrollView style={styles.scroll}>
       <View style={styles.table}>
         {renderHeader()}
         {isLoading ? (
@@ -204,7 +220,7 @@ export default function TransactionTable({
           />
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -215,7 +231,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   table: {
-    minWidth: screenWidth < 600 ? screenWidth : undefined,
+    minWidth: isMobileWidth ? screenWidth : undefined,
     flexGrow: 1,
   },
   noDataText: {
@@ -240,7 +256,9 @@ const styles = StyleSheet.create({
   },
   cell: {
     flex: 1,
-    padding: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    justifyContent: "center",
   },
   header: {
     backgroundColor: "#e0e0e0",
@@ -260,7 +278,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#007aff",
   },
   expandedContentContainer: {
-    flexDirection: screenWidth < 600 ? "column" : "row",
+    flexDirection: isMobileWidth ? "column" : "row",
     backgroundColor: "#fdfdfd",
     padding: 16,
     borderBottomWidth: 1,
@@ -270,7 +288,7 @@ const styles = StyleSheet.create({
   },
   expandedCard: {
     flex: 1,
-    minWidth: screenWidth < 600 ? "100%" : "48%",
+    minWidth: isMobileWidth ? "100%" : "48%",
     backgroundColor: "transparent",
     padding: 5,
   },
