@@ -30,6 +30,8 @@ type Transaction = {
   id: string;
   transaction_date: string;
   selected_msisdn: string;
+  is_refunded: boolean;
+  is_voided: boolean;
   total: number;
   items: Item[];
 };
@@ -46,13 +48,23 @@ type Props = {
   isLoading?: boolean;
 };
 
-export default function TransactionTable({ data, sortConfig, onSort, isLoading}: Props) {
+export default function TransactionTable({
+  data,
+  sortConfig,
+  onSort,
+  isLoading,
+}: Props) {
   const columns = [
     { key: "expand", label: "", width: 0.5 },
     { key: "id", label: "Transaction ID", width: 2 },
     { key: "selected_msisdn", label: "MSISDN", width: 1.5 },
     { key: "total", label: "Amount", width: 1 },
   ];
+
+  const columnWidths: { [key: string]: number } = columns.reduce((acc, col) => {
+    acc[col.key] = col.width;
+    return acc;
+  }, {} as { [key: string]: number });
 
   const [expandedRowId, setExpandedRowId] = useState<string | null>(null);
 
@@ -63,7 +75,12 @@ export default function TransactionTable({ data, sortConfig, onSort, isLoading}:
           return (
             <View
               key="expand"
-              style={[styles.cell, styles.expandCell, styles.header]}
+              style={[
+                styles.cell,
+                styles.expandCell,
+                styles.header,
+                { flex: columnWidths[col.key] },
+              ]}
             />
           );
         }
@@ -79,7 +96,7 @@ export default function TransactionTable({ data, sortConfig, onSort, isLoading}:
         return (
           <Pressable
             key={col.key}
-            style={[styles.cell, styles.header]}
+            style={[styles.cell, styles.header, { flex: columnWidths[col.key] }]}
             onPress={() => onSort(col.key as keyof Transaction)}
           >
             <Text style={styles.headerText}>
@@ -95,8 +112,14 @@ export default function TransactionTable({ data, sortConfig, onSort, isLoading}:
     const isExpanded = expandedRowId === item.id;
     return (
       <>
-        <View style={styles.row}>
-          <View style={[styles.cell, styles.expandCell]}>
+        <View
+          style={
+            item.is_voided || item.is_refunded ? styles.voidRow : styles.row
+          }
+        >
+          <View
+            style={[styles.cell, styles.expandCell, { flex: columnWidths["expand"] }]}
+          >
             <Pressable
               onPress={() => setExpandedRowId(isExpanded ? null : item.id)}
               style={styles.expandButton}
@@ -109,9 +132,15 @@ export default function TransactionTable({ data, sortConfig, onSort, isLoading}:
               />
             </Pressable>
           </View>
-          <Text style={styles.cell}>{item.id}</Text>
-          <Text style={styles.cell}>{item.selected_msisdn}</Text>
-          <Text style={styles.cell}>${item.total}</Text>
+          <Text style={[styles.cell, { flex: columnWidths["id"] }]}>
+            {item.id}
+          </Text>
+          <Text style={[styles.cell, { flex: columnWidths["selected_msisdn"] }]}>
+            {item.selected_msisdn}
+          </Text>
+          <Text
+            style={[styles.cell, { flex: columnWidths["total"] }]}
+          >{`$${item.total}`}</Text>
         </View>
 
         {isExpanded && (
@@ -204,6 +233,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     borderBottomWidth: 1,
     borderColor: "#ccc",
+  },
+  voidRow: {
+    flexDirection: "row",
+    backgroundColor: "#f77060",
   },
   cell: {
     flex: 1,
