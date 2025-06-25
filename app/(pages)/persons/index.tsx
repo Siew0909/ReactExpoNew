@@ -49,6 +49,14 @@ const [filters, setFilters] = useState({
       const valA = a[sortConfig.key];
       const valB = b[sortConfig.key];
 
+     // Handle null or undefined
+    const isANull = valA === null || valA === undefined;
+    const isBNull = valB === null || valB === undefined;
+
+    if (isANull && !isBNull) return sortConfig.direction === "asc" ? -1 : 1;
+    if (!isANull && isBNull) return sortConfig.direction === "asc" ? 1 : -1;
+    if (isANull && isBNull) return 0;
+
       if (typeof valA === "string" && typeof valB === "string") {
         return sortConfig.direction === "asc"
           ? valA.localeCompare(valB)
